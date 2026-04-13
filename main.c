@@ -642,11 +642,13 @@ int main(int argc, char **argv)
 			if (chdir("/"))
 				perror("chdir()");
 
-			cur_fd = open("/dev/null", O_WRONLY);
-			if (cur_fd > 0) {
+			cur_fd = open("/dev/null", O_RDWR);
+			if (cur_fd >= 0) {
 				dup2(cur_fd, 0);
 				dup2(cur_fd, 1);
 				dup2(cur_fd, 2);
+				if (cur_fd > 2)
+					close(cur_fd);
 			}
 
 			break;
