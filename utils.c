@@ -254,8 +254,6 @@ bool uh_addr_rfc1918(struct uh_addr *addr)
 	return ((a >= 0x0A000000) && (a <= 0x0AFFFFFF)) ||
 	       ((a >= 0xAC100000) && (a <= 0xAC1FFFFF)) ||
 	       ((a >= 0xC0A80000) && (a <= 0xC0A8FFFF));
-
-	return 0;
 }
 
 
