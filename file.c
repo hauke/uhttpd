@@ -377,20 +377,21 @@ static bool uh_file_if_match(struct client *cl, struct stat *s)
 	char buf[128];
 	const char *tag = uh_file_mktag(s, buf, sizeof(buf));
 	char *hdr = uh_file_header(cl, HDR_IF_MATCH);
+	int hlen, i;
 	char *p;
-	int i;
 
 	if (!hdr)
 		return true;
 
+	hlen = strlen(hdr);
 	p = &hdr[0];
-	for (i = 0; i < strlen(hdr); i++)
+	for (i = 0; i <= hlen; i++)
 	{
-		if ((hdr[i] == ' ') || (hdr[i] == ',')) {
-			hdr[i++] = 0;
-			p = &hdr[i];
-		} else if (!strcmp(p, "*") || !strcmp(p, tag)) {
-			return true;
+		if (hdr[i] == ' ' || hdr[i] == ',' || hdr[i] == '\0') {
+			hdr[i] = 0;
+			if (*p && (!strcmp(p, "*") || !strcmp(p, tag)))
+				return true;
+			p = &hdr[i + 1];
 		}
 	}
 
@@ -418,25 +419,27 @@ static int uh_file_if_none_match(struct client *cl, struct stat *s)
 	char buf[128];
 	const char *tag = uh_file_mktag(s, buf, sizeof(buf));
 	char *hdr = uh_file_header(cl, HDR_IF_NONE_MATCH);
+	int hlen, i;
 	char *p;
-	int i;
 
 	if (!hdr)
 		return true;
 
+	hlen = strlen(hdr);
 	p = &hdr[0];
-	for (i = 0; i < strlen(hdr); i++) {
-		if ((hdr[i] == ' ') || (hdr[i] == ',')) {
-			hdr[i++] = 0;
-			p = &hdr[i];
-		} else if (!strcmp(p, "*") || !strcmp(p, tag)) {
-			if ((cl->request.method == UH_HTTP_MSG_GET) ||
-				(cl->request.method == UH_HTTP_MSG_HEAD))
-				uh_file_response_304(cl, s);
-			else
-				uh_file_response_412(cl);
+	for (i = 0; i <= hlen; i++) {
+		if (hdr[i] == ' ' || hdr[i] == ',' || hdr[i] == '\0') {
+			hdr[i] = 0;
+			if (*p && (!strcmp(p, "*") || !strcmp(p, tag))) {
+				if ((cl->request.method == UH_HTTP_MSG_GET) ||
+					(cl->request.method == UH_HTTP_MSG_HEAD))
+					uh_file_response_304(cl, s);
+				else
+					uh_file_response_412(cl);
 
-			return false;
+				return false;
+			}
+			p = &hdr[i + 1];
 		}
 	}
 
