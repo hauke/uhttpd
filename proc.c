@@ -18,6 +18,7 @@
  */
 
 #include <arpa/inet.h>
+#include <signal.h>
 #include <libubox/blobmsg.h>
 #include "uhttpd.h"
 
@@ -362,6 +363,7 @@ bool uh_create_process(struct client *cl, struct path_info *pi, char *url,
 		close(wfd[1]);
 
 		uh_close_fds();
+		signal(SIGPIPE, SIG_DFL);
 		cb(cl, pi, url);
 		exit(0);
 	}
