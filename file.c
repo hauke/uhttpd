@@ -912,7 +912,10 @@ static char *uh_handle_alias(char *old_url)
 		new_len = old_len + MAX(conf.cgi_prefix_len, path_len);
 
 		if (new_len > url_len) {
-			new_url = realloc(new_url, new_len);
+			char *tmp = realloc(new_url, new_len);
+			if (!tmp)
+				return NULL;
+			new_url = tmp;
 			url_len = new_len;
 		}
 
@@ -938,6 +941,10 @@ void uh_handle_request(struct client *cl)
 
 	blob_buf_init(&cl->hdr_response, 0);
 	url = uh_handle_alias(url);
+	if (!url) {
+		uh_client_error(cl, 500, "Internal Server Error", "Out of memory");
+		return;
+	}
 
 	uh_handler_run(cl, &url, false);
 	if (!url)
