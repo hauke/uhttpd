@@ -231,7 +231,6 @@ uh_ucode_state_init(struct ucode_prefix *ucode)
 	uc_value_t *v;
 	int exitcode;
 
-	uc_search_path_init(&config.module_search_path);
 	uc_vm_init(vm, &config);
 	uc_stdlib_load(uc_vm_scope_get(vm));
 
@@ -429,6 +428,8 @@ ucode_plugin_init(const struct uhttpd_ops *o, struct config *c)
 
 	ops = o;
 	_conf = c;
+
+	uc_search_path_init(&config.module_search_path);
 
 	list_for_each_entry(p, &conf.ucode_prefix, list)
 		uh_ucode_state_init(p);
