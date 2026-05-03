@@ -316,7 +316,7 @@ static time_t uh_file_date2unix(const char *date)
 	if (strptime(date, "%a, %d %b %Y %H:%M:%S %Z", &t) != NULL)
 		return timegm(&t);
 
-	return 0;
+	return (time_t)-1;
 }
 
 static char * uh_file_unix2date(time_t ts, char *buf, int len)
@@ -402,11 +402,16 @@ static bool uh_file_if_match(struct client *cl, struct stat *s)
 static int uh_file_if_modified_since(struct client *cl, struct stat *s)
 {
 	char *hdr = uh_file_header(cl, HDR_IF_MODIFIED_SINCE);
+	time_t t;
 
 	if (!hdr)
 		return true;
 
-	if (uh_file_date2unix(hdr) >= s->st_mtime) {
+	t = uh_file_date2unix(hdr);
+	if (t == (time_t)-1)
+		return true;
+
+	if (t >= s->st_mtime) {
 		uh_file_response_304(cl, s);
 		return false;
 	}
@@ -461,8 +466,16 @@ static int uh_file_if_range(struct client *cl, struct stat *s)
 static int uh_file_if_unmodified_since(struct client *cl, struct stat *s)
 {
 	char *hdr = uh_file_header(cl, HDR_IF_UNMODIFIED_SINCE);
+	time_t t;
 
-	if (hdr && uh_file_date2unix(hdr) <= s->st_mtime) {
+	if (!hdr)
+		return true;
+
+	t = uh_file_date2unix(hdr);
+	if (t == (time_t)-1)
+		return true;
+
+	if (t <= s->st_mtime) {
 		uh_file_response_412(cl);
 		return false;
 	}
